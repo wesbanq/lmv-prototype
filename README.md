@@ -4,13 +4,15 @@ A clickable desktop-web prototype of **Pickpart**, a PC builder with whole-build
 
 ## Run
 
-ES modules need to be served over HTTP. `file://` won't work.
+With [Bun](https://bun.sh):
 
 ```bash
-python3 -m http.server 8000
+bun start
 ```
 
-Then open <http://localhost:8000>. It's plain HTML, CSS and JS, so there's no build step and no dependencies. The layout is fixed to the 1440 px desktop frame from Figma.
+Then open <http://localhost:3000>. To use a different port, run `PORT=8080 bun start`. `bun dev` restarts the server automatically when `server.ts` changes.
+
+There's nothing to install, so no `bun install` is needed. `server.ts` is a small static file server, and the app itself is plain HTML, CSS and JS with no build step. Any other static server works too (for example `python3 -m http.server`). Opening `index.html` directly via `file://` doesn't, because ES modules have to be served over HTTP. The layout is fixed to the 1440 px desktop frame from Figma.
 
 ## Screens (Figma frame → route)
 
