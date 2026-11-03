@@ -1,0 +1,129 @@
+/* ==========================================================================
+   Pickpart design tokens
+   Source of truth: Figma file «ЛМВ лаб.3» → local variables
+   (collections Primitives, Color, Spacing) and text styles.
+   Every value below is copied 1:1 from Figma and matches report
+   sections 5 (spacing), 6 (typography) and 7 (palette).
+   ========================================================================== */
+
+:root {
+  /* ---------- Primitives ---------- */
+  --primary-50: #e6edfb;
+  --primary-100: #ccdaf6;
+  --primary-600: #2456c9;
+  --primary-700: #1d47a8;
+  --primary-800: #173a88;
+
+  --secondary-50: #e3f4f2;
+  --secondary-600: #0f6f68;
+
+  --neutral-0: #ffffff;
+  --neutral-50: #f5f7fa;
+  --neutral-100: #e9eef5;
+  --neutral-200: #d5dce6;
+  --neutral-500: #677284;
+  --neutral-600: #4b5768;
+  --neutral-900: #18202e;
+
+  --success-50: #e3f3ea;
+  --success-700: #16714a;
+  --warning-50: #fcf0dc;
+  --warning-700: #935600;
+  --error-50: #fbe8e6;
+  --error-600: #bd342a;
+  --info-50: #e3f0fa;
+  --info-700: #1d6aa3;
+
+  /* ---------- Color (semantic aliases) ---------- */
+  --bg-page: var(--neutral-50);
+  --bg-surface: var(--neutral-0);
+  --bg-disabled: var(--neutral-100);
+  --bg-brand-soft: var(--primary-50);
+  --bg-selected: var(--primary-100);
+  --bg-toggle-off: var(--neutral-500);
+
+  --text-default: var(--neutral-900);
+  --text-secondary: var(--neutral-600);
+  --text-placeholder: var(--neutral-500);
+  --text-on-primary: var(--neutral-0);
+  --text-link: var(--primary-600);
+  --text-disabled: var(--neutral-500);
+
+  --icon-default: var(--neutral-900);
+  --icon-secondary: var(--neutral-600);
+  --icon-brand: var(--primary-600);
+  --icon-on-primary: var(--neutral-0);
+
+  --border-default: var(--neutral-200);
+  --border-strong: var(--neutral-500);
+  --border-focus: var(--primary-600);
+  --border-error: var(--error-600);
+  --border-nuance: var(--warning-700);
+  --border-brand: var(--primary-600);
+
+  --action-primary: var(--primary-600);
+  --action-primary-hover: var(--primary-700);
+  --action-primary-pressed: var(--primary-800);
+
+  --status-compatible: var(--success-700);
+  --status-compatible-bg: var(--success-50);
+  --status-nuance: var(--warning-700);
+  --status-nuance-bg: var(--warning-50);
+  --status-conflict: var(--error-600);
+  --status-conflict-bg: var(--error-50);
+  --status-info: var(--info-700);
+  --status-info-bg: var(--info-50);
+  --status-recommended: var(--secondary-600);
+  --status-recommended-bg: var(--secondary-50);
+  --status-unverified: var(--neutral-600);
+  --status-unverified-bg: var(--neutral-100);
+
+  /* ---------- Spacing ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+
+  --border-width-default: 1px;
+  --border-width-focus: 2px;
+
+  /* ---------- Effects (from Figma layer effects) ---------- */
+  --scrim: rgba(24, 32, 46, 0.55);                       /* neutral/900 @ 55% */
+  --shadow-dialog: 0 8px 12px rgba(23, 33, 46, 0.16);   /* Dialog drop shadow */
+  --shadow-toast: 0 4px 16px rgba(23, 33, 46, 0.12);    /* Toast drop shadow  */
+
+  /* ---------- Grid (report §5.1, desktop 1440: 12 col, gutter 24, margins 80) ---------- */
+  --grid-max: 1280px;   /* 1440 − 2 × 80 */
+  --margin: 80px;
+  --gutter: 24px;
+  --sidebar: 360px;
+
+  /* ---------- Typography ---------- */
+  --font-display: 'Manrope', system-ui, sans-serif;
+  --font-text: 'Inter', system-ui, sans-serif;
+}
+
+
+/* ---------- Text styles (Figma) ---------- */
+.t-h1      { font: 800 32px/40px var(--font-display); }
+.t-h2      { font: 700 26px/32px var(--font-display); }
+.t-h3      { font: 700 22px/28px var(--font-display); }
+.t-h4      { font: 600 18px/24px var(--font-text); }
+.t-h5      { font: 600 16px/24px var(--font-text); }
+.t-h6      { font: 600 14px/20px var(--font-text); }
+.t-body    { font: 400 16px/24px var(--font-text); }
+.t-body-s  { font: 400 14px/20px var(--font-text); }
+.t-caption { font: 400 12px/16px var(--font-text); }
+.t-label   { font: 600 12px/16px var(--font-text); }
+.t-button  { font: 600 16px/24px var(--font-text); }
+.t-price   { font: 700 16px/24px var(--font-text); font-variant-numeric: tabular-nums; }
+.t-price-l { font: 800 24px/32px var(--font-text); font-variant-numeric: tabular-nums; }

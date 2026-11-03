@@ -1,0 +1,9 @@
+{
+  "name": "pickpart-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun server.ts",
+    "dev": "bun --watch server.ts"
+  }
+}
