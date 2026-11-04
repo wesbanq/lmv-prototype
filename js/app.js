@@ -411,7 +411,11 @@ function screenProduct(pid, fromCatalog) {
   }).join('');
 
   return `<main class="page" id="main">
-    ${fromCatalog ? btn('← До каталогу', { kind: 'text', act: 'go', attrs: `data-arg="#/catalog/${prod.slot}"` }) : btn('← До збірки', { kind: 'text', act: 'go', attrs: 'data-arg="#/build"' })}
+    ${fromCatalog
+      ? btn('← До каталогу', { kind: 'text', act: 'go', attrs: `data-arg="#/catalog/${prod.slot}"` })
+      : `<div class="back-row">${btn('← До збірки', { kind: 'text', act: 'go', attrs: 'data-arg="#/build"' })}${current
+        ? btn('Обрати іншу модель', { kind: 'text', act: 'go', attrs: `data-arg="#/catalog/${prod.slot}"` })
+        : ''}</div>`}
     ${pageTitle(prod.name, `${prod.detail} · ${n} ${plural(n, ['пропозиція', 'пропозиції', 'пропозицій'])} від продавців`)}
     <div class="split">
       <div class="split__main"><h2 class="t-h3">Пропозиції продавців</h2>${rows}</div>
