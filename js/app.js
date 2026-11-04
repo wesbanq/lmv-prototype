@@ -58,7 +58,31 @@ function recheck() {
   checking = true;
   clearTimeout(checkTimer);
   render();
-  checkTimer = setTimeout(() => { checking = false; render(); }, 1400);
+  checkTimer = setTimeout(() => { checking = false; render(); flagConflict(); }, 1400);
+}
+
+/* Microinteractions: point at the slot that needs attention
+   - after a check finds a conflict (report §12.1) the conflicting slot scrolls into
+     view and its border pulses twice;
+   - a click on the disabled order button shakes the reason under it and points at
+     the slot that blocks the order (conflict, or the first empty required slot). */
+const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function replay(el, cls) {
+  el.classList.remove(cls);
+  void el.offsetWidth;            // restart the animation if it's already running
+  el.classList.add(cls);
+  el.addEventListener('animationend', () => el.classList.remove(cls), { once: true });
+}
+function flagSlot(id) {
+  const el = document.querySelector(`.slot[data-slot="${id}"]`);
+  if (!el) return;
+  el.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' });
+  replay(el, 'is-flagged');
+}
+function flagConflict() {
+  if (route().name !== 'build') return;
+  const c = evaluate().conflicts[0];
+  if (c) flagSlot(c.slot);
 }
 
 /* ==========================================================================
@@ -192,12 +216,12 @@ function buildSummary(ev, { cta = 'Оформити замовлення', ctaAc
   let note = '';
   let ready = false;
   if (checking) {
-    note = `<p class="summary__note summary__note--info">${icon('spinner', 16, 'ic-secondary spin')}<span>Перевіряємо сумісність усієї збірки…</span></p>`;
+    note = `<p class="summary__note summary__note--info" id="summary-note">${icon('spinner', 16, 'ic-secondary spin')}<span>Перевіряємо сумісність усієї збірки…</span></p>`;
   } else if (ev.conflicts.length) {
-    note = `<p class="summary__note summary__note--conflict">${icon('xCircle', 16, 'ic-conflict')}<span>Спершу розв’яжіть конфлікт: ${esc(ev.conflicts[0].short)}</span></p>`;
+    note = `<p class="summary__note summary__note--conflict" id="summary-note">${icon('xCircle', 16, 'ic-conflict')}<span>Спершу розв’яжіть конфлікт: ${esc(ev.conflicts[0].short)}</span></p>`;
   } else if (ev.missing.length) {
     const k = ev.missing.length;
-    note = `<p class="summary__note summary__note--info">${icon('info', 16, 'ic-secondary')}<span>Заповніть ще ${k} ${plural(k, ['обов’язковий слот', 'обов’язкові слоти', 'обов’язкових слотів'])}: ${esc(joinAnd(ev.missing.map((s) => s.acc)))}</span></p>`;
+    note = `<p class="summary__note summary__note--info" id="summary-note">${icon('info', 16, 'ic-secondary')}<span>Заповніть ще ${k} ${plural(k, ['обов’язковий слот', 'обов’язкові слоти', 'обов’язкових слотів'])}: ${esc(joinAnd(ev.missing.map((s) => s.acc)))}</span></p>`;
   } else {
     ready = true;
     note = ev.total <= BUDGET
@@ -211,7 +235,9 @@ function buildSummary(ev, { cta = 'Оформити замовлення', ctaAc
     <div class="summary__divider"></div>
     <div class="summary__row"><span class="t-h5">Разом</span><span class="t-price-l">${money(ev.total)}</span></div>
     ${note}
-    ${btn(cta, { kind: 'primary', act: ctaAct, block: true, disabled: !ready })}
+    ${ready
+      ? btn(cta, { kind: 'primary', act: ctaAct, block: true })
+      : btn(cta, { kind: 'primary', act: 'explain-blocked', block: true, attrs: 'aria-disabled="true" aria-describedby="summary-note"' })}
     ${btn('Зберегти збірку', { kind: 'text', act: 'save-build', block: true })}
   </section>`;
 }
@@ -221,7 +247,7 @@ function buildSummary(ev, { cta = 'Оформити замовлення', ctaAc
    ========================================================================== */
 function slotCard(slot, ev) {
   if (checking && ev.parts[slot.id]) {
-    return `<div class="slot slot--loading" aria-busy="true" aria-label="${esc(slot.label)}: перевіряємо">
+    return `<div class="slot slot--loading" data-slot="${slot.id}" aria-busy="true" aria-label="${esc(slot.label)}: перевіряємо">
       <div class="slot__thumb"></div>
       <div class="slot__info"><span class="skel" style="width:96px;height:12px"></span><span class="skel" style="width:220px;max-width:100%;height:16px"></span><span class="skel" style="width:160px;max-width:80%;height:12px"></span></div>
       <div class="slot__price" style="align-items:flex-end"><span class="skel" style="width:72px;height:16px"></span><span class="skel" style="width:88px;height:20px"></span></div>
@@ -229,7 +255,7 @@ function slotCard(slot, ev) {
   }
   const x = ev.parts[slot.id];
   if (!x) {
-    return `<div class="slot slot--empty">
+    return `<div class="slot slot--empty" data-slot="${slot.id}">
       <div class="slot__thumb">${icon(slot.icon, 24, 'ic-secondary')}</div>
       <div class="slot__info"><p class="slot__cat">${esc(slot.label)}</p><p class="slot__name">${esc(slot.empty[0])}</p><p class="slot__meta">${esc(slot.empty[1])}</p></div>
       ${btn('Додати', { kind: 'secondary', act: 'go', attrs: `data-arg="#/catalog/${slot.id}" aria-label="Додати: ${esc(slot.label)}"` })}
@@ -238,7 +264,7 @@ function slotCard(slot, ev) {
   const st = ev.status[slot.id];
   const meta = x.offer.noSpecs ? `${x.prod.noSpecsMeta} · ${x.seller}` : `${x.prod.metaBase} · ${x.seller}`;
   const mod = st === 'nuance' || st === 'conflict' ? ` slot--${st}` : '';
-  return `<button type="button" class="slot${mod}" data-act="go" data-arg="#/product/${x.prod.id}">
+  return `<button type="button" class="slot${mod}" data-slot="${slot.id}" data-act="go" data-arg="#/product/${x.prod.id}">
     <span class="slot__thumb">${icon(slot.icon, 24, 'ic-brand')}</span>
     <span class="slot__info"><span class="slot__cat">${esc(slot.label)}</span><span class="slot__name">${esc(x.prod.name)}</span><span class="slot__meta">${esc(meta)}</span></span>
     <span class="slot__price"><span class="t-price">${money(x.price)}</span>${badge(st)}</span>
@@ -385,7 +411,11 @@ function screenProduct(pid, fromCatalog) {
   }).join('');
 
   return `<main class="page" id="main">
-    ${fromCatalog ? btn('← До каталогу', { kind: 'text', act: 'go', attrs: `data-arg="#/catalog/${prod.slot}"` }) : btn('← До збірки', { kind: 'text', act: 'go', attrs: 'data-arg="#/build"' })}
+    ${fromCatalog
+      ? btn('← До каталогу', { kind: 'text', act: 'go', attrs: `data-arg="#/catalog/${prod.slot}"` })
+      : `<div class="back-row">${btn('← До збірки', { kind: 'text', act: 'go', attrs: 'data-arg="#/build"' })}${current
+        ? btn('Обрати іншу модель', { kind: 'text', act: 'go', attrs: `data-arg="#/catalog/${prod.slot}"` })
+        : ''}</div>`}
     ${pageTitle(prod.name, `${prod.detail} · ${n} ${plural(n, ['пропозиція', 'пропозиції', 'пропозицій'])} від продавців`)}
     <div class="split">
       <div class="split__main"><h2 class="t-h3">Пропозиції продавців</h2>${rows}</div>
@@ -619,6 +649,14 @@ const ACTIONS = {
   login: () => toast('info', 'Вхід з’явиться пізніше', 'Поки що збірка зберігається на цьому пристрої'),
   'save-build': () => toast('success', 'Збірку збережено', 'Вона залишиться на цьому пристрої', { label: 'Скасувати', run: () => toast('info', 'Збереження скасовано') }),
   checkout: () => { location.hash = '#/checkout'; },
+  'explain-blocked': () => {
+    const note = document.getElementById('summary-note');
+    if (note) replay(note, 'is-nudged');
+    if (checking) return;
+    const ev = evaluate();
+    const target = ev.conflicts.length ? ev.conflicts[0].slot : ev.missing.length ? ev.missing[0].id : null;
+    if (target) flagSlot(target);
+  },
   'suggest-mb': () => {
     const cur = part('motherboard');
     const cpu = part('cpu');

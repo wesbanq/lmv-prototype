@@ -14,6 +14,8 @@ body { min-width: 1440px; }
 .page__title { display: flex; flex-direction: column; gap: var(--space-2); }
 .page__subtitle { color: var(--text-secondary); }
 .page > .btn--text { align-self: flex-start; }
+/* «← До збірки» + «Обрати іншу модель» on the product page (Figma: screen 5, Back row) */
+.back-row { display: flex; align-items: center; gap: var(--space-4); align-self: flex-start; }
 
 /* main column + 360 px sidebar, 32 px apart (Build / Offers / Checkout layouts) */
 .split { display: flex; align-items: flex-start; gap: var(--space-6); }
