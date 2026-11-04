@@ -1,9 +1,13 @@
 /* ==========================================================================
    Screen layouts — «Ключові екрани» frames (1440 × …, content 1280, margins 80)
-   Desktop web only: the page never collapses below the 1440 px frame width.
+   Desktop (≥ 768 px): the page never collapses below the 1440 px frame width.
+   Mobile (< 768 px): the 360 px layout from Figma screen 8 — see the end of this file.
    ========================================================================== */
 
-body { min-width: 1440px; }
+@media (min-width: 768px) {
+  body { min-width: 1440px; }
+  .only-mobile, .header__search-toggle, [data-more-slots] { display: none; }
+}
 
 .page {
   width: 100%; max-width: calc(var(--grid-max) + 2 * var(--margin));
@@ -64,3 +68,43 @@ body { min-width: 1440px; }
 .proto__body { display: flex; flex-direction: column; gap: var(--space-1); padding: 0 var(--space-2) var(--space-2); }
 .proto__body button { text-align: left; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); color: var(--text-link); font: 600 12px/16px var(--font-text); }
 .proto__body button:hover { background: var(--bg-brand-soft); }
+
+/* ==========================================================================
+   Mobile — Figma «8. Моя збірка — мобільна» (360 px, 4 columns, gutter 16, margins 16)
+   ========================================================================== */
+.header__search-toggle { padding: var(--space-2); margin-right: calc(-1 * var(--space-2)); border-radius: var(--radius-sm); }
+
+@media (max-width: 767px) {
+  :root { --margin: var(--space-4); --gutter: var(--space-4); }
+  .only-desktop { display: none; }
+
+  /* top bar: logo + search icon; the search field opens under it */
+  .header { flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+  .header .nav, .header [data-act="login"], .header .search { display: none; }
+  .header__search-toggle { display: flex; }
+  .header-bar.is-search-open .header .search { display: flex; order: 3; flex-basis: 100%; }
+  .logo__mark { width: 28px; height: 28px; }
+  .logo__name { font: 600 18px/24px var(--font-text); }   /* H4 */
+
+  .page { padding: var(--space-5) var(--margin) var(--space-8); gap: var(--space-3); }
+  .page .t-h1 { font: 700 26px/32px var(--font-display); }  /* H2 */
+  .page__subtitle { font: 400 14px/20px var(--font-text); }  /* Body S */
+
+  /* one column: compatibility panel → main content → build summary */
+  .split { flex-direction: column; align-items: stretch; gap: var(--space-3); }
+  .split__main { order: 2; }
+  .split__aside { display: contents; }
+  .split__aside > .panel { order: 1; }
+  .split__aside > .summary { order: 3; }
+
+  /* slot cards: no thumbnail when filled, so name and price fit; extra compatible slots collapse */
+  .slot:not(.slot--empty) .slot__thumb { display: none; }
+  .slot--more { display: none; }
+  .slot--empty .slot__name { -webkit-line-clamp: 3; }
+
+  /* other screens just stack */
+  .filters { width: auto; }
+  .form-row { flex-direction: column; align-items: stretch; }
+  .ship-grid { grid-template-columns: 1fr; }
+  .offer__thumb { display: none; }
+}

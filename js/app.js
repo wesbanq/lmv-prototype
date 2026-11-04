@@ -53,9 +53,12 @@ const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)
 let checking = false;   // compatibility re-check in progress (slots → Loading, panel → Checking)
 let checkTimer = 0;
 let lastRoute = '';
+let searchOpen = false;     // mobile top bar: the search field opens from the icon (Figma: screen 8)
+let slotsExpanded = false;  // mobile build: compatible slots are collapsed behind «Ще N …»
 
 function recheck() {
   checking = true;
+  slotsExpanded = false;
   clearTimeout(checkTimer);
   render();
   checkTimer = setTimeout(() => { checking = false; render(); flagConflict(); }, 1400);
@@ -161,7 +164,7 @@ function header(active) {
   const item = (id, label, href) => `<a class="nav__item" href="${href}" ${active === id ? 'aria-current="page"' : ''}>${label}</a>`;
   const nav = item('catalog', 'Комплектуючі', '#/catalog/cpu') + item('build', 'Моя збірка', '#/build') + item('orders', 'Мої замовлення', '#/orders');
   return `
-  <header class="header-bar">
+  <header class="header-bar${searchOpen ? ' is-search-open' : ''}">
     <div class="header">
       <a class="logo" href="#/build" aria-label="Pickpart — на головну">
         <span class="logo__mark">${icon('cpu', 20, 'ic-on-primary')}</span>
@@ -177,12 +180,16 @@ function header(active) {
       </form>
       <nav class="nav" aria-label="Розділи">${nav}</nav>
       ${btn('Увійти', { kind: 'text', act: 'login' })}
+      <button type="button" class="header__search-toggle" data-act="toggle-search" aria-label="Пошук комплектуючих" aria-expanded="${searchOpen}">${icon('search', 24, 'ic-default')}</button>
     </div>
   </header>`;
 }
 
-function pageTitle(title, subtitle) {
-  return `<div class="page__title"><h1 class="t-h1">${esc(title)}</h1>${subtitle ? `<p class="t-body page__subtitle">${esc(subtitle)}</p>` : ''}</div>`;
+function pageTitle(title, subtitle, mobileSubtitle = '') {
+  const sub = mobileSubtitle
+    ? `<p class="t-body page__subtitle"><span class="only-desktop">${esc(subtitle)}</span><span class="only-mobile">${esc(mobileSubtitle)}</span></p>`
+    : subtitle ? `<p class="t-body page__subtitle">${esc(subtitle)}</p>` : '';
+  return `<div class="page__title"><h1 class="t-h1">${esc(title)}</h1>${sub}</div>`;
 }
 
 function compatibilityPanel(ev) {
@@ -245,7 +252,7 @@ function buildSummary(ev, { cta = 'Оформити замовлення', ctaAc
 /* ==========================================================================
    Screens
    ========================================================================== */
-function slotCard(slot, ev) {
+function slotCard(slot, ev, collapsible = false) {
   if (checking && ev.parts[slot.id]) {
     return `<div class="slot slot--loading" data-slot="${slot.id}" aria-busy="true" aria-label="${esc(slot.label)}: перевіряємо">
       <div class="slot__thumb"></div>
@@ -263,13 +270,16 @@ function slotCard(slot, ev) {
   }
   const st = ev.status[slot.id];
   const meta = x.offer.noSpecs ? `${x.prod.noSpecsMeta} · ${x.seller}` : `${x.prod.metaBase} · ${x.seller}`;
-  const mod = st === 'nuance' || st === 'conflict' ? ` slot--${st}` : '';
+  const mod = (st === 'nuance' || st === 'conflict' ? ` slot--${st}` : '') + (collapsible ? ' slot--more' : '');
   return `<button type="button" class="slot${mod}" data-slot="${slot.id}" data-act="go" data-arg="#/product/${x.prod.id}">
     <span class="slot__thumb">${icon(slot.icon, 24, 'ic-brand')}</span>
     <span class="slot__info"><span class="slot__cat">${esc(slot.label)}</span><span class="slot__name">${esc(x.prod.name)}</span><span class="slot__meta">${esc(meta)}</span></span>
     <span class="slot__price"><span class="t-price">${money(x.price)}</span>${badge(st)}</span>
   </button>`;
 }
+
+// a compatibility issue on one slot also involves these slots (CPU ↔ board, cooler ↔ case)
+const RELATED_SLOTS = { motherboard: ['cpu'], cooler: ['case'] };
 
 function screenBuild() {
   const ev = evaluate();
@@ -290,10 +300,21 @@ function screenBuild() {
   const subtitle = hasProblems
     ? 'Проблемні слоти виділені рамкою кольору статусу — їх видно під час прокручування.'
     : `Ігри та кодинг · бюджет до ${money(BUDGET)} · ${ev.filled} з 8 слотів заповнено`;
+  // Mobile (Figma: screen 8): problem slots, the slots they clash with and empty slots stay
+  // visible; the remaining compatible ones collapse behind «Ще N сумісні компоненти».
+  const keep = new Set(ev.issues.flatMap((i) => [i.slot, ...(RELATED_SLOTS[i.slot] || [])]));
+  const more = hasProblems && !slotsExpanded
+    ? SLOTS.filter((s) => ev.parts[s.id] && ev.status[s.id] === 'compatible' && !keep.has(s.id)).map((s) => s.id)
+    : [];
+  const nc = ev.conflicts.length;
+  const mobileSub = hasProblems && nc ? `${ev.filled} з 8 слотів · ${nc} ${plural(nc, ['конфлікт', 'конфлікти', 'конфліктів'])}` : '';
+  const moreBtn = more.length
+    ? btn(`Ще ${more.length} ${plural(more.length, ['сумісний компонент', 'сумісні компоненти', 'сумісних компонентів'])}`, { kind: 'text', act: 'show-all-slots', block: true, attrs: 'data-more-slots' })
+    : '';
   return `<main class="page" id="main">
-    ${pageTitle('Моя збірка', subtitle)}
+    ${pageTitle('Моя збірка', subtitle, mobileSub)}
     <div class="split">
-      <div class="split__main" aria-label="Слоти збірки">${SLOTS.map((s) => slotCard(s, ev)).join('')}</div>
+      <div class="split__main" aria-label="Слоти збірки">${SLOTS.map((s) => slotCard(s, ev, more.includes(s.id))).join('')}${moreBtn}</div>
       <aside class="split__aside">${compatibilityPanel(ev)}${buildSummary(ev)}</aside>
     </div>
   </main>`;
@@ -574,6 +595,7 @@ function render() {
 // remember the route we navigate *from* (used for «← До каталогу»)
 let currentRouteName = route().name;
 window.addEventListener('hashchange', () => {
+  searchOpen = false;
   lastRoute = currentRouteName;
   currentRouteName = route().name;
   render();
@@ -649,6 +671,13 @@ const ACTIONS = {
   login: () => toast('info', 'Вхід з’явиться пізніше', 'Поки що збірка зберігається на цьому пристрої'),
   'save-build': () => toast('success', 'Збірку збережено', 'Вона залишиться на цьому пристрої', { label: 'Скасувати', run: () => toast('info', 'Збереження скасовано') }),
   checkout: () => { location.hash = '#/checkout'; },
+  'show-all-slots': () => { slotsExpanded = true; render(); },
+  'toggle-search': () => {
+    searchOpen = !searchOpen;
+    $('.header-bar').classList.toggle('is-search-open', searchOpen);
+    $('.header__search-toggle').setAttribute('aria-expanded', String(searchOpen));
+    if (searchOpen) $('.header .search input').focus();
+  },
   'explain-blocked': () => {
     const note = document.getElementById('summary-note');
     if (note) replay(note, 'is-nudged');

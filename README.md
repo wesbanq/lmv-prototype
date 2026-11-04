@@ -12,7 +12,7 @@ bun start
 
 Then open <http://localhost:3000>. To use a different port, run `PORT=8080 bun start`. `bun dev` restarts the server automatically when `server.ts` changes.
 
-There's nothing to install, so no `bun install` is needed. `server.ts` is a small static file server, and the app itself is plain HTML, CSS and JS with no build step. Any other static server works too (for example `python3 -m http.server`). Opening `index.html` directly via `file://` doesn't, because ES modules have to be served over HTTP. The layout is fixed to the 1440 px desktop frame from Figma.
+There's nothing to install, so no `bun install` is needed. `server.ts` is a small static file server, and the app itself is plain HTML, CSS and JS with no build step. Any other static server works too (for example `python3 -m http.server`). Opening `index.html` directly via `file://` doesn't, because ES modules have to be served over HTTP. On desktop and tablets the layout is the 1440 px frame from Figma. On phones (< 768 px) it switches to the 360 px layout of Figma screen 8 «Моя збірка — мобільна»: a top bar with the logo and a search icon, the compatibility panel above the slots, compatible slots collapsed behind «Ще N сумісні компоненти», and the build summary at the bottom. The other screens stack into one column.
 
 ## Screens (Figma frame → route)
 
@@ -25,6 +25,7 @@ There's nothing to install, so no `bun install` is needed. `server.ts` is a smal
 | 5. Компонент — пропозиції продавців | `#/product/r5-7600` |
 | 6. Оформлення — доставка і дані | `#/checkout` |
 | 7. Мої замовлення | `#/orders` |
+| 8. Моя збірка — мобільна | `#/build` at a phone width (< 768 px) |
 
 The **«Прототип · сценарії»** switcher (bottom-left) jumps straight to the empty, conflict, ready or ordered states. It isn't part of the product UI.
 
